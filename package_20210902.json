@@ -1,0 +1,49 @@
+{
+  "name": "flightsurety",
+  "version": "1.0.0",
+  "description": "",
+  "directories": {
+    "test": "test"
+  },
+  "repository": "https://github.com/techbubble/flightsurety",
+  "license": "MIT",
+  "scripts": {
+    "test": "truffle test ./test/flightSurety.js",
+    "dapp": "webpack serve --mode development --config webpack.config.dapp.js",
+    "dapp:prod": "webpack --mode production  --config webpack.config.dapp.js",
+    "server": "rm -rf ./build/server && webpack --config webpack.config.server.js"
+  },
+  "author": "Nik Kalyani <nik@kalyani.com> https://www.kalyani.com",
+  "devDependencies": {
+    "@babel/cli": "*",
+    "@babel/core": "*",
+    "@babel/plugin-proposal-class-properties": "*",
+    "@babel/plugin-proposal-object-rest-spread": "*",
+    "@babel/preset-env": "*",
+    "babel-core": "*",
+    "babel-loader": "*",
+    "babel-polyfill": "*",
+    "babel-preset-es2015": "*",
+    "babel-preset-stage-0": "*",
+    "bignumber.js": "*",
+    "css-loader": "^1.0.0",
+    "express": "*",
+    "file-loader": "*",
+    "html-loader": "*",
+    "html-webpack-plugin": "*",
+    "openzeppelin-solidity": "*",
+    "start-server-webpack-plugin": "*",
+    "style-loader": "*",
+    "superstatic": "*",
+    "truffle": "*",
+    "truffle-hdwallet-provider": "*",
+    "web3": "*",
+    "webpack": "^4.35.2",
+    "webpack-cli": "^3.3.6",
+    "webpack-dev-server": "^3.7.2",
+    "webpack-node-externals": "1.7.2"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.2.0"
+  }
+}
