@@ -8,7 +8,7 @@ module.exports = async function(deployer, network, accounts) {
     let secondAirline = '0xB91189D2075A29555455eE5728a71Cf33F6c7Ef0';
     await deployer.deploy(FlightSuretyData)
     .then(async () => {
-        return await deployer.deploy(FlightSuretyApp, FlightSuretyData.address)
+        return await deployer.deploy(FlightSuretyApp, FlightSuretyData.address, firstAirline)
                 .then(() => {
                     let config = {
                         localhost: {
@@ -30,10 +30,11 @@ module.exports = async function(deployer, network, accounts) {
     secondAirline = accounts[2];
 
     await flightSuretyData.registerAirline(firstAirline, {from: accounts[0]});
-    await flightSuretyData.deauthorizeContract(accounts[0]);
+    // await flightSuretyData.deauthorizeContract(accounts[0]);
 
     console.log("FlightSuretyData address: " + FlightSuretyData.address);
     console.log("FlightSuretyApp address: "+ FlightSuretyApp.address);
+    console.log("registered Airline: " + await flightSuretyData.getRegisteredAirlines());
     console.log("END OF DEPLOYMENT.");
 
     // let flightSuretyApp = await FlightSuretyApp.deployed();

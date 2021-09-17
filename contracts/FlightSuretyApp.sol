@@ -102,6 +102,21 @@ contract FlightSuretyApp {
         _;
     }
 
+modifier requireFlightRegistered(string memory flightId, address airline, uint256 timestamp)  {
+        string memory rflightId;
+        uint256 flightTime;
+        address airlineAddress;
+        bool isRegistered;
+        uint8 statusCode;
+
+        bytes32 flightKey = getFlightKey(airline, flightId, timestamp);
+
+        (rflightId, airlineAddress, flightTime, isRegistered, statusCode) = 
+                        flightSuretyData.getFlight(flightKey);
+        require(isRegistered, "Flight not registered for insurance purchase");
+        _;
+    }
+
     modifier requireNotPaid()  {
         address airlineAddress;
         string memory airlineName;
@@ -132,7 +147,7 @@ contract FlightSuretyApp {
     * @dev Contract constructor
     *
     */
-    constructor(address _flightSuretyData)  
+    constructor(address _flightSuretyData, address firstAirline)  
     {
         contractOwner = msg.sender;
         flightSuretyData = FlightSuretyData(payable(_flightSuretyData));
@@ -260,18 +275,24 @@ contract FlightSuretyApp {
                                      address airline, 
                                      uint256 flightTime)  
                                                 requireIsOperational 
-                                                requireCustomerNotPaid(flightId, airline, flightTime)
+                                                // requireCustomerNotPaid(flightId, airline, flightTime)
+                                               requireFlightRegistered(flightId, airline, flightTime) 
                                                 external
                                                 payable
     {
         bytes32 flightKey = getFlightKey(airline, flightId, flightTime);
+       
         flightSuretyData.buy{value: msg.value}(flightKey, msg.sender, msg.value);
+        // flightSuretyData.buy{value: msg.value}(getFlightKey(airline, flightId, flightTime), msg.sender, msg.value);
     }
     
    /**
     * @dev Called after oracle has updated flight status.  TODO: Determine the payouts if the flight was delayed
     *
     */  
+
+    
+
     function processFlightStatus
                                 (
                                     bytes32 requestKey,
@@ -280,6 +301,8 @@ contract FlightSuretyApp {
                                 internal
                                 
     {
+        
+    
         uint256 premiumAmt;
         uint256 payoutAmt;
         // check if status code is 20, 40 or 50.  
@@ -287,11 +310,11 @@ contract FlightSuretyApp {
         // payout is 1.5 times.
         // fetch the customers who has insured for the flight.
         // multiply the paid amout by 1.5 and transfer ether from data contract to customer
-
+        
         if (statusCode == 20 || statusCode == 40 || statusCode == 50)  {
             // get insured customer list
             address[] memory insuredCustomers = flightSuretyData.getInsuredCustomers(requestKey);
-
+            
             // get the customer premium for each insured customer and make payment
             for (uint8 i; i< insuredCustomers.length; i++)  {
                 premiumAmt = flightSuretyData.getCustomerPremium(insuredCustomers[i], requestKey);
@@ -302,6 +325,7 @@ contract FlightSuretyApp {
 
     }
 
+    
 
     // Generate a request for oracles to fetch flight information
     function fetchFlightStatus
@@ -358,6 +382,9 @@ contract FlightSuretyApp {
     event FlightStatusInfo(address airline, string flight, uint256 timestamp, uint8 status);
 
     event OracleReport(address airline, string flight, uint256 timestamp, uint8 status);
+
+    event InsuredCustomers(address[] insuredCustomers);
+    event RespEventCode(uint8 statusCode);
 
     // Event fired when flight status request is submitted
     // Oracles track this and if they have a matching index
@@ -467,12 +494,16 @@ contract FlightSuretyApp {
         // oracles respond with the *** same *** information
         address[] memory orclResponses =  flightSuretyData.getOrclResponses(key, statusCode);
         if (orclResponses.length >= MIN_RESPONSES) {
-            emit FlightStatusInfo(airline, flight, timestamp, statusCode);
+            
             // close the request
             flightSuretyData.closeOrclResponse(key);   // close the request.  No further responses will be accepted.
-
-            // Handle flight status as appropriate.. TODO
-            processFlightStatus(key, statusCode);
+            
+            // Handle flight status as appropriate.. 
+            // processFlightStatus(key, statusCode);  //  BUG was here.  See the description belowmoved to Data contract
+            processFlightStatus(getFlightKey(airline, flight, timestamp), statusCode);
+            // flightSuretyData.creditInsurees(key, statusCode);  // THIS WAS THE BUG.  WAS HARD TO FIND WITHOUT THE console output in truffle.  Used hardhat to identify it.
+            // flightSuretyData.creditInsurees(getFlightKey(airline, flight, timestamp), statusCode); 
+            
         }
     }
 

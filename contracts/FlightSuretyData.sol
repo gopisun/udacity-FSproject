@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../node_modules/openzeppelin-solidity/contracts/utils/math/SafeMath.sol";
+// import "truffle/Console.sol";
 
 contract FlightSuretyData {
     using SafeMath for uint256;
@@ -64,7 +65,7 @@ contract FlightSuretyData {
         CustomerPayment[] custInsDetails;  // Array of customers who had purchased insurance 
     }
 
-    mapping (bytes32 => InsPayment) flightInsurancePayments;
+    mapping (bytes32 => InsPayment) flightInsurancePayments;  // key is airline+glight+timestamp
 
     // data structures for Oracle management
 
@@ -96,6 +97,7 @@ contract FlightSuretyData {
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
 
+    event PayoutMade(address customerId, uint256 payoutAmt);
 
     /**
     * @dev Constructor
@@ -104,6 +106,7 @@ contract FlightSuretyData {
     constructor() 
     {
         contractOwner = msg.sender;
+        
     }
 
     /********************************************************************************************/
@@ -149,7 +152,7 @@ contract FlightSuretyData {
 
     modifier requireAuthorizedContractOrOwner()
     {
-        require((authorizedContracts[msg.sender]) || ((keccak256(abi.encodePacked(contractOwner))) == (keccak256(abi.encodePacked(msg.sender)))),"Not an authorized contract owner");
+        require((authorizedContracts[msg.sender]) || ((keccak256(abi.encodePacked(contractOwner))) == (keccak256(abi.encodePacked(msg.sender)))),"Not an authorized caller or contract owner");
         _;
     }
 
@@ -220,7 +223,10 @@ contract FlightSuretyData {
     *      Can only be called from FlightSuretyApp contract
     *
     */   
-    function registerAirline(address airlineAddress) requireIsOperational requireAuthorizedContract external    
+    function registerAirline(address airlineAddress) requireIsOperational 
+                                                     // requireAuthorizedContract 
+                                                     requireAuthorizedContractOrOwner
+                                                     external    
     {
         airlinesRegistered.registeredAirlines[airlineAddress] = true;
         airlinesRegistered.arrRegAirlines.push(airlineAddress);
@@ -426,6 +432,8 @@ contract FlightSuretyData {
         return insuredCustomers;
     }
 
+    
+    
     function makePayout(address customerId, uint256 payoutAmt)
                             requireAuthorizedContract 
                             requireIsOperational 
@@ -433,6 +441,7 @@ contract FlightSuretyData {
                             payable
     {
         payable(customerId).transfer(payoutAmt);
+        emit PayoutMade(customerId, payoutAmt);
     }
 
 
@@ -537,9 +546,34 @@ contract FlightSuretyData {
     /**
      *  @dev Credits payouts to insurees
     */
-    function creditInsurees() requireIsOperational
+    function creditInsurees(bytes32 requestKey, uint8 statusCode) 
+                                requireIsOperational
+                                requireAuthorizedContract 
                                 external
+                                payable
+
     {
+        address custAddr;
+        uint256 payoutAmt = 100;
+        
+        // for testing
+        emit PayoutMade(custAddr, payoutAmt);
+        payoutAmt = 0;
+
+        if (statusCode == 20 || statusCode == 40 || statusCode == 50)  {
+            // credit Insurees
+            CustomerPayment[] memory insPayments = flightInsurancePayments[requestKey].custInsDetails;
+            
+            // for testing
+            emit PayoutMade(custAddr, insPayments.length);
+
+            for (uint i = 0; i < insPayments.length;i++) {
+                custAddr = insPayments[i].customerId;
+                payoutAmt = (insPayments[i].payAmount*150)/100;
+                payable(custAddr).transfer(payoutAmt);
+                emit PayoutMade(custAddr, payoutAmt);
+            }
+        }
     }
     
 

@@ -26,6 +26,7 @@ contract('Oracles', async (accounts) => {
   before('setup contract', async () => {
     config = await Test.Config(accounts);
     await config.flightSuretyData.authorizeContract(config.flightSuretyApp.address);
+    await config.flightSuretyData.registerAirline(config.firstAirline);
 
     
 
@@ -56,6 +57,20 @@ contract('Oracles', async (accounts) => {
     let flight = 'ND1309'; // Course number
     let timestamp = Math.floor(Date.now() / 1000);
 
+    // get the registered airlines
+    let registeredAirlines = await config.flightSuretyData.getRegisteredAirlines();
+    console.log("Registered Airlines: "+ registeredAirlines);
+
+    // Flight needs to be regist3ered and customers purchase insurance prior to fetchFlightStatus. Customer accounts: 30-34
+    await config.flightSuretyApp.registerFlight(flight, timestamp,{from:config.firstAirline});
+
+    let paymentAmount = web3.utils.toWei("1", "ether");
+    await config.flightSuretyApp.purchaseFlightInsurance(flight, config.firstAirline,timestamp, {from:accounts[30], value:paymentAmount});
+    await config.flightSuretyApp.purchaseFlightInsurance(flight, config.firstAirline,timestamp, {from:accounts[31], value:paymentAmount});
+    await config.flightSuretyApp.purchaseFlightInsurance(flight, config.firstAirline,timestamp, {from:accounts[32], value:paymentAmount});
+    await config.flightSuretyApp.purchaseFlightInsurance(flight, config.firstAirline,timestamp, {from:accounts[33], value:paymentAmount});
+    await config.flightSuretyApp.purchaseFlightInsurance(flight, config.firstAirline,timestamp, {from:accounts[34], value:paymentAmount});
+
     // Submit a request for oracles to get status information for a flight
     let tx = await config.flightSuretyApp.fetchFlightStatus(config.firstAirline, flight, timestamp, {from: accounts[0]});
     // ACT
@@ -68,6 +83,7 @@ contract('Oracles', async (accounts) => {
             return (event.flight == flight) && (event.timestamp == timestamp);
         
     });
+    console.log("Data contract balance before  response: " + await web3.utils.fromWei(await web3.eth.getBalance(config.flightSuretyData.address)));
 
     // Since the Index assigned to each test account is opaque by design
     // loop through all the accounts and for each account, all its Indexes (indices?)
@@ -82,19 +98,48 @@ contract('Oracles', async (accounts) => {
 
         try {
           // Submit a response...it will only be accepted if there is an Index match
-          await config.flightSuretyApp.submitOracleResponse(eventIndex, config.firstAirline, flight, timestamp, STATUS_CODE_ON_TIME, { from: accounts[a] });
-          console.log("Submit response success" );
+          let tx2 = await config.flightSuretyApp.submitOracleResponse(eventIndex, config.firstAirline, flight, timestamp, 20 ,{ from: accounts[a] });
+          console.log("Submit response success: " + tx2 );
+
+          truffleAssert.eventEmitted(tx2, 'OracleReport', (event) => {
+            console.log("Event OracleReport - eventCode " + event.airline + " " + event.status);
+            return (true);
+           });
+
+           truffleAssert.eventEmitted(tx2, 'FlightStatusInfo', (event) => {
+            console.log("Event FlightStatusInfo -  " + event.airline + " " + event.status + " " + event.flight + " " + event.timestamp);
+            return (true);
+           });
+
+          truffleAssert.eventEmitted(tx2, 'PayoutMade', (event) => {
+
+            console.log("Event PayoutMade - customer ID: " + event.customerId);
+            console.log("Event PayoutMade - customer payout amojunt: " + event.payoutAmt);
+           
+            // return ev.param1 === 1 && ev.param2 === farmerAddress;
+            return (true);
+        
+          });
+          truffleAssert.eventEmitted(tx2, 'RespEventCode', (event) => {
+            console.log("Event RespEventCode - eventCode " + event.eventCode);
+            return (true);
+           });
+           truffleAssert.eventEmitted(tx2, 'InsuredCustomers', (event) => {
+            console.log("Event InsuredCustomers - InsuredCustomers:" + event.insuredCustomers);
+            return (true);
+           });
 
         }
         catch(e) {
           // Enable this when debugging
            // console.log('\nError', idx, oracleIndexes[idx].toNumber(), flight, timestamp);
-           console.log('\nError:', accounts[a]);
+           //console.log('\nError:', accounts[a]);
            // console.log(e);
         }
 
     //  }
     }
+    console.log("Data contract balance after response: " + await web3.utils.fromWei(await web3.eth.getBalance(config.flightSuretyData.address)));
 
 
   });
