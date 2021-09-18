@@ -16,11 +16,15 @@ let flightTime;
 
 async function registerFlight()  {
     
-    console.log("In registerFlight(): " + flightId);
-    let airlineAddr = accountsArr[6];  // account 2 is the airling that is registering the flight
-    let flightTime = new Date(2021, 9, 15, 17, 30, 0, 0).getTime()/1000;
+    console.log("In registerFlight(), flight Id: " + flightId);
+    let airlineAddr = accountsArr[6];  // account 6 is the airling that is registering the flight
+    // let flightTime = new Date(2021, 10, 15, 21, 30, 0, 0);
+    let flightTime = new Date(1634333400000);
+    let flightTimeForContract = flightTime.getTime()/1000;
 
-    await flightSuretyApp.methods.registerFlight(flightId, flightTime).send({"from": airlineAddr, 
+    console.log("In registerFlight(), airline addr: " + airlineAddr);
+    console.log("In registerFlight(), flight time C " + flightTimeForContract);
+    await flightSuretyApp.methods.registerFlight(flightId, flightTimeForContract).send({"from": airlineAddr, 
                                                                     "gas": 4712388,
                                                                     "gasPrice": 100000000000});
     console.log("In registerFlight - Flight registration done. ");

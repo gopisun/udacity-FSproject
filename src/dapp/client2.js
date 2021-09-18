@@ -10,9 +10,10 @@ Web3 = require('web3');
 
 async function submitFlightStatusRequest()  {
     
-    let flightTime = new Date(2021, 10, 27, 19, 45, 0, 0);
+    // let flightTime = new Date(2021, 10, 15, 21, 30, 0, 0);
+    let flightTime = new Date(1634333400000);
     let flightTimeForContract = flightTime.getTime()/1000;
-    const retVal = await flightSuretyApp.methods.fetchFlightStatus(accountsArr[1],  // airline
+    const retVal = await flightSuretyApp.methods.fetchFlightStatus(accountsArr[6],  // airline
                                                                    "BA234",     // picked a random account for airline
                                                                    flightTimeForContract)
                                                                    .send({from: accountsArr[12]});  
