@@ -72,7 +72,7 @@ let fee = 1000000000000000000;  // 10^18 wei is 1 ether.  Units are in wei
 let oracles = [];
 
 const orclRespMap = new Map();  // map to hold the response codes to be sent as partof oracle response.
-/*
+
 orclRespMap.set(0,0);
 orclRespMap.set(1,10);
 orclRespMap.set(2,20);
@@ -83,9 +83,10 @@ orclRespMap.set(6,10);
 orclRespMap.set(7,20);
 orclRespMap.set(8,30);
 orclRespMap.set(9,40);
-*/
+
 
 // just for testing to force the oracle response to always as FLIGHT DELAYED -- 20.  This is to make sure insurance payout happens.
+/*
 orclRespMap.set(0,20);
 orclRespMap.set(1,20);
 orclRespMap.set(2,20);
@@ -96,7 +97,7 @@ orclRespMap.set(6,20);
 orclRespMap.set(7,20);
 orclRespMap.set(8,30);
 orclRespMap.set(9,20);
-
+*/
 
 /*
 flightSuretyApp.methods.getregistrationFee().call().then((regFee) => { 
