@@ -26,7 +26,7 @@ To use the dapp:
    The oracles will get registered with the DLT application.  Oracle addresses are from accounts 41 to 60.
 4. Start the dapp with the command - `npm run dapp`
 
-For End to End Scenarios
+## For End to End Scenarios
 ----------------------
 Please note:  For end to end scenarios,  dapp is NOT used.  Instead client scritps have been provided.  The scripts are located at ./src/dapp
 
@@ -57,7 +57,7 @@ Please note:  For end to end scenarios,  dapp is NOT used.  Instead client scrit
        server process) responds and invokes the submitOracleResponse method in the app contract.  The responses are random.  IF the necessary
        criteria are met i.e flight is delayed, insuress get a pay back.
 
-End to End scenario execution:
+## End to End scenario execution:
 ------------------------------
 To execute an end to end scenario execute the following scripts in the sequence.
 
